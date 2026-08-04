@@ -32,7 +32,11 @@ export async function getResourcesWithFavorites(filters: {
     const where = {
         ...(filters.typeIds && filters.typeIds.length > 0 ? { typeId: { in: filters.typeIds } } : {}),
         ...(filters.categoryIds && filters.categoryIds.length > 0
-            ? { categories: { some: { categoryId: { in: filters.categoryIds } } } }
+            ? {
+                AND: filters.categoryIds.map((categoryId) => ({
+                    categories: { some: { categoryId } },
+                })),
+            }
             : {}),
         ...(filters.favoritesOnly && userId ? { favorites: { some: { userId } } } : {}),
         ...(filters.search

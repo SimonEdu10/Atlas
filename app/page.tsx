@@ -23,7 +23,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      <h1 className="text-2xl font-bold mb-6">Mis links</h1>
+      <h1 className="text-2xl font-bold mb-6">Links</h1>
 
       <Suspense fallback={null}>
         <FilterBar types={types} categories={categories} />
