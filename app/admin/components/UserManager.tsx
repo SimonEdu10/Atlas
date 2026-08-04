@@ -14,12 +14,14 @@ const roleLabels: Record<string, string> = {
   PENDING: 'Pendiente',
   USER: 'Usuario',
   ADMIN: 'Admin',
+  SUPER_ADMIN: 'Super Admin',
 };
 
 const roleColors: Record<string, string> = {
   PENDING: 'bg-amber-50 text-amber-700',
   USER: 'bg-gray-100 text-gray-600',
   ADMIN: 'bg-red-50 text-red-700',
+  SUPER_ADMIN: 'bg-purple-50 text-purple-700',
 };
 
 export function UserManager({ users, updateUserRole }: Props) {
@@ -59,6 +61,7 @@ export function UserManager({ users, updateUserRole }: Props) {
               <option value="PENDING">Pendiente</option>
               <option value="USER">Usuario</option>
               <option value="ADMIN">Admin</option>
+              <option value="SUPER_ADMIN">Super Admin</option>
             </select>
           </div>
         </li>

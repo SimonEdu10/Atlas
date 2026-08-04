@@ -11,6 +11,13 @@ enum Role {
   PENDING
   USER
   ADMIN
+  SUPER_ADMIN
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  PRIVATE_SHARED
 }
 
 model User {
@@ -21,9 +28,11 @@ model User {
   role         Role     @default(PENDING)
   createdAt    DateTime @default(now()) @map("created_at")
 
-  sessions    Session[]
-  favorites   Favorite[]
-  resetTokens PasswordResetToken[]
+  sessions         Session[]
+  favorites        Favorite[]
+  resetTokens      PasswordResetToken[]
+  createdResources Resource[]      @relation("ResourceCreator")
+  resourceShares   ResourceShare[]
 
   @@map("users")
 }
@@ -68,11 +77,16 @@ model Resource {
   typeId      Int                @map("type_id")
   type        ResourceType       @relation(fields: [typeId], references: [id])
   imgUrl      String?            @map("img_url")
+  visibility  Visibility         @default(PUBLIC)
+  creatorId   String?            @map("creator_id")
+  creator     User?              @relation("ResourceCreator", fields: [creatorId], references: [id], onDelete: SetNull)
   categories  ResourceCategory[]
   favorites   Favorite[]
+  shares      ResourceShare[]
   createdAt   DateTime           @default(now()) @map("created_at")
 
   @@index([typeId])
+  @@index([creatorId])
   @@map("resources")
 }
 
@@ -96,6 +110,18 @@ model ResourceCategory {
 
   @@id([resourceId, categoryId])
   @@map("resource_categories")
+}
+
+model ResourceShare {
+  id         Int      @id @default(autoincrement())
+  resourceId Int      @map("resource_id")
+  userId     String   @map("user_id")
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([resourceId, userId])
+  @@map("resource_shares")
 }
 
 model Favorite {

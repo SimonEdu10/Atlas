@@ -14,21 +14,54 @@ type Resource = {
   typeId: number;
   type: { name: string };
   categories: { categoryId: number; category: { name: string } }[];
+  visibility: string;
+  creatorId: string | null;
+  creator: { id: string; name: string } | null;
+  createdAt: string | Date;
 };
 
 type Props = {
   resources: Resource[];
   types: { id: number; name: string }[];
   categories: { id: number; name: string }[];
-  deleteResource: (id: number) => Promise<void>;
+  shareableUsers: { id: string; name: string; email: string }[];
+  currentUserId: string;
+  currentUserRole: string;
+  deleteResource: (id: number) => Promise<{ error: string } | { success: true }>;
   toggleFavorite: (id: number) => Promise<void>;
   updateResource: (id: number, formData: FormData) => Promise<{ error: string } | { success: true }>;
 };
 
-export function ResourceList({ resources, types, categories, deleteResource, toggleFavorite, updateResource }: Props) {
+const visibilityLabels: Record<string, string> = {
+  PUBLIC: 'Público',
+  PRIVATE: 'Privado',
+  PRIVATE_SHARED: 'Compartido',
+};
+
+export function ResourceList({
+  resources,
+  types,
+  categories,
+  shareableUsers,
+  currentUserId,
+  currentUserRole,
+  deleteResource,
+  toggleFavorite,
+  updateResource,
+}: Props) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const editingResource = resources.find((r) => r.id === editingId) ?? null;
   const { confirm, showSuccess, showError } = useFeedback();
+
+  function canEdit(r: Resource) {
+    return currentUserRole === 'SUPER_ADMIN' || r.creatorId === currentUserId;
+  }
+
+  function canDelete(r: Resource) {
+    if (currentUserRole === 'USER') return false;
+    if (currentUserRole === 'SUPER_ADMIN') return true;
+    return r.creatorId === currentUserId;
+  }
 
   async function handleUpdate(formData: FormData) {
     if (editingId == null) return;
@@ -49,15 +82,19 @@ export function ResourceList({ resources, types, categories, deleteResource, tog
     const ok = await confirm('¿Seguro que quieres eliminar este link? Esta acción no se puede deshacer.');
     if (!ok) return;
 
-    await deleteResource(id);
+    const result = await deleteResource(id);
+    if ('error' in result) {
+      showError(result.error);
+      return;
+    }
+
     showSuccess('Link eliminado correctamente.');
   }
 
   if (resources.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-400">Todavía no has guardado ningún link.</p>
-        <p className="text-gray-400 text-sm">Usa el botón + para agregar el primero.</p>
+        <p className="text-gray-400">No se encontraron links con estos filtros.</p>
       </div>
     );
   }
@@ -71,7 +108,8 @@ export function ResourceList({ resources, types, categories, deleteResource, tog
               src={r.imgUrl || '/images/logo.png'}
               alt={r.title}
               className={`w-full h-36 ${r.imgUrl ? 'object-cover' : 'object-contain bg-gray-50 p-6'}`}
-            />            <div className="p-4">
+            />
+            <div className="p-4">
               <div className="flex items-start justify-between gap-2">
                 <a href={r.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-900 hover:text-red-600 line-clamp-2">
                   {r.title}
@@ -89,6 +127,7 @@ export function ResourceList({ resources, types, categories, deleteResource, tog
 
               <div className="flex flex-wrap gap-2 mt-3">
                 <span className="text-xs rounded-full bg-red-50 px-2 py-1 text-red-700">{r.type.name}</span>
+                <span className="text-xs rounded-full bg-blue-50 px-2 py-1 text-blue-700">{visibilityLabels[r.visibility]}</span>
                 {r.categories.map((rc) => (
                   <span key={rc.category.name} className="text-xs rounded-full bg-gray-100 px-2 py-1 text-gray-600">
                     {rc.category.name}
@@ -96,13 +135,21 @@ export function ResourceList({ resources, types, categories, deleteResource, tog
                 ))}
               </div>
 
+              <p className="text-xs text-gray-400 mt-2">
+                {r.creator ? `Creado por ${r.creator.name}` : 'Creador desconocido'} · {new Date(r.createdAt).toLocaleDateString()}
+              </p>
+
               <div className="flex gap-3 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => setEditingId(r.id)} className="text-xs text-gray-400 hover:text-red-600">
-                  Editar
-                </button>
-                <button onClick={() => handleDelete(r.id)} className="text-xs text-gray-400 hover:text-red-600">
-                  Eliminar
-                </button>
+                {canEdit(r) && (
+                  <button onClick={() => setEditingId(r.id)} className="text-xs text-gray-400 hover:text-red-600">
+                    Editar
+                  </button>
+                )}
+                {canDelete(r) && (
+                  <button onClick={() => handleDelete(r.id)} className="text-xs text-gray-400 hover:text-red-600">
+                    Eliminar
+                  </button>
+                )}
               </div>
             </div>
           </li>
@@ -114,6 +161,7 @@ export function ResourceList({ resources, types, categories, deleteResource, tog
           <ResourceForm
             types={types}
             categories={categories}
+            shareableUsers={shareableUsers}
             action={handleUpdate}
             submitLabel="Guardar cambios"
             initialValues={{
@@ -122,6 +170,7 @@ export function ResourceList({ resources, types, categories, deleteResource, tog
               description: editingResource.description,
               typeId: editingResource.typeId,
               categoryIds: editingResource.categories.map((c) => c.categoryId),
+              visibility: editingResource.visibility,
             }}
           />
         )}

@@ -1,9 +1,9 @@
-import { requireAdminPage } from '../require-admin';
+import { requireSuperAdminPage } from '../require-admin';
 import { getUsersAdmin, updateUserRole } from '../actions';
 import { UserManager } from '../components/UserManager';
 
 export default async function UsersPage() {
-  const check = await requireAdminPage();
+  const check = await requireSuperAdminPage();
   if (!check.authorized) {
     return (
       <main className="p-6">

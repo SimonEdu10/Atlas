@@ -7,8 +7,30 @@ import { Role } from '../generated/prisma/client';
 
 async function requireAdmin() {
   const user = await getSessionUser();
-  if (!user || user.role !== 'ADMIN') throw new Error('No autorizado');
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) throw new Error('No autorizado');
   return user;
+}
+
+async function requireSuperAdmin() {
+  const user = await getSessionUser();
+  if (!user || user.role !== 'SUPER_ADMIN') throw new Error('No autorizado');
+  return user;
+}
+
+export async function getUsersAdmin() {
+  await requireSuperAdmin();
+  const users = await prisma.user.findMany({
+    select: { id: true, name: true, email: true, role: true },
+    orderBy: { name: 'asc' },
+  });
+  const order = { PENDING: 0, USER: 1, ADMIN: 2, SUPER_ADMIN: 3 };
+  return users.sort((a, b) => order[a.role] - order[b.role]);
+}
+
+export async function updateUserRole(userId: string, role: Role) {
+  await requireSuperAdmin();
+  await prisma.user.update({ where: { id: userId }, data: { role } });
+  revalidatePath('/admin/users');
 }
 
 export async function getTypesAdmin() {
@@ -61,19 +83,4 @@ export async function deleteCategory(id: number) {
   await requireAdmin();
   await prisma.category.delete({ where: { id } });
   revalidatePath('/admin');
-}
-
-export async function getUsersAdmin() {
-  const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true },
-    orderBy: { name: 'asc' },
-  });
-  const order = { PENDING: 0, USER: 1, ADMIN: 2 };
-  return users.sort((a, b) => order[a.role] - order[b.role]);
-}
-
-export async function updateUserRole(userId: string, role: Role) {
-  await requireAdmin();
-  await prisma.user.update({ where: { id: userId }, data: { role } });
-  revalidatePath('/admin/users');
 }
