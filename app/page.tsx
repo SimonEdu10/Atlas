@@ -5,6 +5,8 @@ import { ResourceList } from './components/ResourceList';
 import { FilterBar } from './components/FilterBar';
 import { Pagination } from './components/Pagination';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParams = { type?: string; category?: string; favorite?: string; q?: string; page?: string };
 
 export default async function Home({ searchParams }: { searchParams: Promise<SearchParams> }) {
