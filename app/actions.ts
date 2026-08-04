@@ -19,8 +19,8 @@ async function requireUser() {
 const PAGE_SIZE = 8;
 
 export async function getResourcesWithFavorites(filters: {
-    typeId?: number;
-    categoryId?: number;
+    typeIds?: number[];
+    categoryIds?: number[];
     favoritesOnly?: boolean;
     search?: string;
     page?: number;
@@ -30,8 +30,10 @@ export async function getResourcesWithFavorites(filters: {
     const page = filters.page ?? 1;
 
     const where = {
-        ...(filters.typeId ? { typeId: filters.typeId } : {}),
-        ...(filters.categoryId ? { categories: { some: { categoryId: filters.categoryId } } } : {}),
+        ...(filters.typeIds && filters.typeIds.length > 0 ? { typeId: { in: filters.typeIds } } : {}),
+        ...(filters.categoryIds && filters.categoryIds.length > 0
+            ? { categories: { some: { categoryId: { in: filters.categoryIds } } } }
+            : {}),
         ...(filters.favoritesOnly && userId ? { favorites: { some: { userId } } } : {}),
         ...(filters.search
             ? {

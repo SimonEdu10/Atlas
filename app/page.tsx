@@ -9,14 +9,14 @@ type SearchParams = { type?: string; category?: string; favorite?: string; q?: s
 
 export default async function Home({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const typeId = params.type ? Number(params.type) : undefined;
-  const categoryId = params.category ? Number(params.category) : undefined;
+  const typeIds = params.type ? params.type.split(',').filter(Boolean).map(Number) : undefined;
+  const categoryIds = params.category ? params.category.split(',').filter(Boolean).map(Number) : undefined;
   const favoritesOnly = params.favorite === '1';
   const search = params.q || undefined;
   const page = params.page ? Number(params.page) : 1;
 
   const [{ resources, totalPages, currentPage }, types, categories] = await Promise.all([
-    getResourcesWithFavorites({ typeId, categoryId, favoritesOnly, search, page }),
+    getResourcesWithFavorites({ typeIds, categoryIds, favoritesOnly, search, page }),
     getTypes(),
     getCategories(),
   ]);
