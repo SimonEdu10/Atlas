@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { Prisma } from '../app/generated/prisma/client';
 import { getSessionUser } from '@/lib/session';
+import { put } from '@vercel/blob';
+
 
 async function requireUser() {
     const user = await getSessionUser();
@@ -88,17 +90,14 @@ export async function getCategories() {
 }
 
 async function saveImage(file: File): Promise<string> {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+  const ext = file.name.split('.').pop() || 'jpg';
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-    const ext = path.extname(file.name) || '.jpg';
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+  const blob = await put(filename, file, {
+    access: 'public',
+  });
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, filename), buffer);
-
-    return `/uploads/${filename}`;
+  return blob.url;
 }
 
 export async function createResource(formData: FormData) {
