@@ -19,14 +19,19 @@ export function AddResourceButton({ types, categories, createResource }: Props) 
         const ok = await confirm('¿Confirmas que quieres guardar este link?');
         if (!ok) return;
 
-        const result = await createResource(formData);
-        if (result && 'error' in result) {
-            showError(result.error);
-            return;
-        }
+        try {
+            const result = await createResource(formData);
+            if (result && 'error' in result) {
+                showError(result.error);
+                return;
+            }
 
-        showSuccess('Link guardado correctamente.');
-        setIsOpen(false);
+            showSuccess('Link guardado correctamente.');
+            setIsOpen(false);
+        } catch (error) {
+            console.error(error);
+            showError('Ocurrió un error inesperado al guardar el link.');
+        }
     }
 
     return (
