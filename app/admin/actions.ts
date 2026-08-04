@@ -16,7 +16,7 @@ export async function getTypesAdmin() {
 }
 
 export async function getCategoriesAdmin() {
-  return prisma.category.findMany({ orderBy: { name: 'asc' }, include: { parent: true } });
+  return prisma.category.findMany({ orderBy: { name: 'asc' } });
 }
 
 export async function createType(formData: FormData) {
@@ -44,21 +44,16 @@ export async function deleteType(id: number) {
 export async function createCategory(formData: FormData) {
   await requireAdmin();
   const name = formData.get('name') as string;
-  const parentIdRaw = formData.get('parentId') as string;
-  const parentId = parentIdRaw ? Number(parentIdRaw) : null;
   if (!name) throw new Error('Falta el nombre');
-  await prisma.category.create({ data: { name, parentId } });
+  await prisma.category.create({ data: { name } });
   revalidatePath('/admin');
 }
 
 export async function updateCategory(id: number, formData: FormData) {
   await requireAdmin();
   const name = formData.get('name') as string;
-  const parentIdRaw = formData.get('parentId') as string;
-  const parentId = parentIdRaw ? Number(parentIdRaw) : null;
   if (!name) throw new Error('Falta el nombre');
-  if (parentId === id) throw new Error('Una categoría no puede ser su propio padre');
-  await prisma.category.update({ where: { id }, data: { name, parentId } });
+  await prisma.category.update({ where: { id }, data: { name } });
   revalidatePath('/admin');
 }
 

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Modal } from '@/app/components/Modal';
 import { useFeedback } from '@/app/components/FeedbackProvider';
 
-type Category = { id: number; name: string; parentId: number | null; parent: { name: string } | null };
+type Category = { id: number; name: string };
 
 type Props = {
   categories: Category[];
@@ -13,18 +13,12 @@ type Props = {
 };
 
 function CategoryForm({
-  categories,
-  excludeId,
   action,
   defaultName,
-  defaultParentId,
   submitLabel,
 }: {
-  categories: Category[];
-  excludeId?: number;
   action: (formData: FormData) => Promise<void>;
   defaultName?: string;
-  defaultParentId?: number | null;
   submitLabel: string;
 }) {
   return (
@@ -39,17 +33,6 @@ function CategoryForm({
       <div>
         <label className="block text-sm font-medium mb-1">Nombre</label>
         <input name="name" required defaultValue={defaultName} className="w-full rounded-lg border border-red-100 p-2" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Categoría padre</label>
-        <select name="parentId" defaultValue={defaultParentId ?? ''} className="w-full rounded-lg border border-red-100 p-2">
-          <option value="">Sin categoría padre</option>
-          {categories
-            .filter((c) => c.id !== excludeId)
-            .map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-        </select>
       </div>
       <button type="submit" className="w-full rounded-lg bg-red-600 py-2 font-semibold text-white hover:bg-red-700">
         {submitLabel}
@@ -101,10 +84,7 @@ export function CategoryManager({ categories, createCategory, updateCategory, de
         <ul className="space-y-2">
           {categories.map((c) => (
             <li key={c.id} className="flex items-center justify-between rounded-lg border border-red-100 bg-white p-3">
-              <span>
-                {c.name}
-                {c.parent && <span className="text-gray-400 text-sm"> — hijo de {c.parent.name}</span>}
-              </span>
+              <span>{c.name}</span>
               <div className="flex gap-3">
                 <button onClick={() => setEditingId(c.id)} className="text-sm text-gray-400 hover:text-red-600">
                   Editar
@@ -127,20 +107,11 @@ export function CategoryManager({ categories, createCategory, updateCategory, de
       </button>
 
       <Modal isOpen={isCreating} onClose={() => setIsCreating(false)} title="Agregar categoría">
-        <CategoryForm categories={categories} action={handleCreate} submitLabel="Guardar categoría" />
+        <CategoryForm action={handleCreate} submitLabel="Guardar categoría" />
       </Modal>
 
       <Modal isOpen={editing !== null} onClose={() => setEditingId(null)} title="Editar categoría">
-        {editing && (
-          <CategoryForm
-            categories={categories}
-            excludeId={editing.id}
-            action={handleUpdate}
-            defaultName={editing.name}
-            defaultParentId={editing.parentId}
-            submitLabel="Guardar cambios"
-          />
-        )}
+        {editing && <CategoryForm action={handleUpdate} defaultName={editing.name} submitLabel="Guardar cambios" />}
       </Modal>
     </>
   );
