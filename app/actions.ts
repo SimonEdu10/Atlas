@@ -90,17 +90,17 @@ export async function getCategories() {
 }
 
 async function saveImage(file: File): Promise<string> {
-  const ext = file.name.split('.').pop() || 'jpg';
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const ext = file.name.split('.').pop() || 'jpg';
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-  const blob = await put(filename, file, {
-    access: 'public',
-  });
+    const blob = await put(filename, file, {
+        access: 'public',
+    });
 
-  return blob.url;
+    return blob.url;
 }
 
-export async function createResource(formData: FormData) {
+export async function createResource(formData: FormData): Promise<{ error: string } | { success: true }> {
     await requireUser();
 
     const title = formData.get('title') as string;
@@ -145,7 +145,7 @@ export async function deleteResource(id: number) {
     revalidatePath('/');
 }
 
-export async function updateResource(id: number, formData: FormData) {
+export async function updateResource(id: number, formData: FormData): Promise<{ error: string } | { success: true }> {
     await requireUser();
 
     const title = formData.get('title') as string;

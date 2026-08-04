@@ -22,7 +22,7 @@ type Props = {
   categories: { id: number; name: string }[];
   deleteResource: (id: number) => Promise<void>;
   toggleFavorite: (id: number) => Promise<void>;
-  updateResource: (id: number, formData: FormData) => Promise<void>;
+  updateResource: (id: number, formData: FormData) => Promise<{ error: string } | { success: true }>;
 };
 
 export function ResourceList({ resources, types, categories, deleteResource, toggleFavorite, updateResource }: Props) {
@@ -36,7 +36,7 @@ export function ResourceList({ resources, types, categories, deleteResource, tog
     if (!ok) return;
 
     const result = await updateResource(editingId, formData);
-    if (result?.error) {
+    if ('error' in result) {
       showError(result.error);
       return;
     }

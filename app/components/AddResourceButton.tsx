@@ -7,27 +7,20 @@ import { useFeedback } from './FeedbackProvider';
 type Props = {
     types: { id: number; name: string }[];
     categories: { id: number; name: string }[];
-    createResource: (formData: FormData) => Promise<void>;
+    createResource: (formData: FormData) => Promise<{ error: string } | { success: true }>;
 };
 
 export function AddResourceButton({ types, categories, createResource }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const { confirm, showSuccess, showError } = useFeedback();
-    /* async function handleCreate(formData: FormData) {
-      const ok = await confirm('¿Confirmas que quieres guardar este link?');
-      if (!ok) return;
-  
-      await createResource(formData);
-      showSuccess('Link guardado correctamente.');
-      setIsOpen(false);
-    } */
+
 
     async function handleCreate(formData: FormData) {
         const ok = await confirm('¿Confirmas que quieres guardar este link?');
         if (!ok) return;
 
         const result = await createResource(formData);
-        if (result?.error) {
+        if (result && 'error' in result) {
             showError(result.error);
             return;
         }
